@@ -114,8 +114,8 @@ function selectLevel(level) {
     document.getElementById("start-screen").classList.remove("active");
     document.getElementById("game-screen").classList.add("active");
 
-    document.getElementById("level-title").textContent = `Уровень ${currentLevel}`;
-    document.getElementById("game-instructions").textContent = levels[currentLevel].instructions;
+    document.getElementById("level-title").textContent = `Уровень ${level}`;
+    document.getElementById("game-instructions").textContent = levels[level].instructions;
 
     startTimer();
     loadSubLevel();
@@ -152,7 +152,7 @@ function loadSubLevel() {
     }
 }
 
-/* ---------- Уровень 1 - продолжить последовательность ---------- */
+/* ---------- Уровень 1: продолжение последовательности ---------- */
 function loadSequenceGame() {
     const seqs = levels[1].sequences;
     let seqIndex;
@@ -161,8 +161,7 @@ function loadSequenceGame() {
     } while (usedFirstLevelIndices.includes(seqIndex) && usedFirstLevelIndices.length < seqs.length);
 
     usedFirstLevelIndices.push(seqIndex);
-    const chosenSequence = seqs[seqIndex];
-    currentSequence = chosenSequence;
+    currentSequence = seqs[seqIndex];
     correctIndex = 4;
 
     const instr = `${levels[1].instructions} ${currentSequence.slice(0,4).join(", ")} ...`;
@@ -178,6 +177,7 @@ function loadSequenceGame() {
         const div = document.createElement("div");
         div.className = "number";
         div.textContent = num;
+        // Двойной клик
         div.ondblclick = () => checkSequenceAnswer(div);
         gameArea.appendChild(div);
     });
@@ -203,7 +203,7 @@ function checkSequenceAnswer(element) {
     }
 }
 
-/* ---------- Уровень 2 - распределить последовательности ---------- */
+/* ---------- Уровень 2: распределить последовательности ---------- */
 let placedCount = 0;
 let totalSequences = 0;
 
@@ -344,7 +344,7 @@ function finalizeSortingLevel() {
     }, 700);
 }
 
-/* ---------- Уровень 3 - собрать арифм. выражение ---------- */
+/* ---------- Уровень 3: собрать арифм. выражение ---------- */
 function loadMathGame() {
     const gameArea = document.getElementById("game-area");
     gameArea.innerHTML = "";
@@ -364,6 +364,7 @@ function loadMathGame() {
     currentExpression = exprs[exprIndex];
     builtExpression = [];
 
+    // Создаем контейнеры
     mathElementsContainer = document.createElement("div");
     mathElementsContainer.className = "math-elements-container";
     mathContainer.appendChild(mathElementsContainer);
@@ -382,50 +383,63 @@ function loadMathGame() {
     resultBlock.textContent = `= ${currentExpression.right}`;
     exprZoneContainer.appendChild(resultBlock);
 
-    // Создаем элементы (left)
+    // Создаем элементы
     const elements = [...currentExpression.left];
     shuffleArray(elements);
 
     elements.forEach(elem => {
-        const div = document.createElement("div");
-        div.className = "math-element";
-        // Назначим анимацию «float-around»
-        // Выбираем случайный ключевой кадр из 3
-        const animNames = ["floatAround1", "floatAround2", "floatAround3"];
-        const randomAnim = animNames[Math.floor(Math.random() * animNames.length)];
-
-        const randDuration = (Math.random() * 2 + 2).toFixed(1); // 2..4 c
-        const randDelay = (Math.random() * 2).toFixed(1);        // 0..2 c
-        const randDir = Math.random() > 0.5 ? "alternate-reverse" : "alternate";
-
-        // Присваиваем стили
-        div.style.animationName = randomAnim;
-        div.style.animationDuration = randDuration + "s";
-        div.style.animationDelay = randDelay + "s";
-        div.style.animationDirection = randDir;
-        div.style.animationIterationCount = "infinite";
-        div.style.animationTimingFunction = "ease-in-out";
-
-        div.onclick = () => selectMathElement(div);
+        const div = createAnimatedElement(elem);
         mathElementsContainer.appendChild(div);
-
-        div.textContent = elem;
     });
 }
 
+function createAnimatedElement(textValue) {
+    const div = document.createElement("div");
+    div.className = "math-element";
+
+    // Генерируем случайные параметры
+    const animNames = ["floatAround1", "floatAround2", "floatAround3"];
+    const randomAnim = animNames[Math.floor(Math.random() * animNames.length)];
+
+    const randDuration = (Math.random() * 2 + 2).toFixed(1); // 2..4 c
+    const randDelay = (Math.random() * 2).toFixed(1);        // 0..2 c
+    const randDir = Math.random() > 0.5 ? "alternate-reverse" : "alternate";
+
+    // Сохраняем их в dataset, чтобы потом можно было восстановить
+    div.dataset.animName = randomAnim;
+    div.dataset.animDuration = randDuration;
+    div.dataset.animDelay = randDelay;
+    div.dataset.animDirection = randDir;
+
+    applyFloatAnimation(div);
+
+    div.onclick = () => selectMathElement(div);
+
+    div.textContent = textValue;
+    return div;
+}
+
+function applyFloatAnimation(el) {
+    el.style.animationName = el.dataset.animName;
+    el.style.animationDuration = el.dataset.animDuration + "s";
+    el.style.animationDelay = el.dataset.animDelay + "s";
+    el.style.animationDirection = el.dataset.animDirection;
+    el.style.animationIterationCount = "infinite";
+    el.style.animationTimingFunction = "ease-in-out";
+}
+
+function removeAnimation(el) {
+    el.style.animationName = "";
+    el.style.animationDuration = "";
+    el.style.animationDelay = "";
+    el.style.animationDirection = "";
+    el.style.animationIterationCount = "";
+    el.style.animationTimingFunction = "";
+}
+
 function selectMathElement(element) {
-    // Убираем класс анимации
-    element.classList.remove("float-around");
+    removeAnimation(element);
 
-    // Сбрасываем инлайн анимацию
-    element.style.animationName = "";
-    element.style.animationDuration = "";
-    element.style.animationIterationCount = "";
-    element.style.animationTimingFunction = "";
-    element.style.animationDelay = "";
-    element.style.animationDirection = "";
-
-    // Переносим в expression-area
     expressionArea.appendChild(element);
     builtExpression.push(element.textContent);
 
@@ -450,17 +464,18 @@ function checkMathExpression() {
         document.getElementById("score").textContent = score;
         setTimeout(finishSubLevel, 700);
     } else {
+        // Ошибка: подсвечиваем и возвращаем наверх
         score -= 10;
         document.getElementById("score").textContent = score;
-        [...expressionArea.children].forEach(el => {
-            el.classList.add("incorrect");
-        });
+        [...expressionArea.children].forEach(el => el.classList.add("incorrect"));
+
         setTimeout(() => {
             [...expressionArea.children].forEach(el => {
                 el.classList.remove("incorrect");
-                // Возвращаем обратно наверх
-                el.classList.add("float-around"); // снова двигаются в контейнере
+                // Возвращаем в mathElementsContainer
                 mathElementsContainer.appendChild(el);
+                // Снова даем анимацию, чтобы элемент опять двигался
+                applyFloatAnimation(el);
             });
             builtExpression = [];
         }, 500);
