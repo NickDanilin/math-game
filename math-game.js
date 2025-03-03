@@ -91,6 +91,11 @@ function startGame() {
 
 /* ---------- Экран выбора уровня (одиночный режим) ---------- */
 function goToLevelSelection() {
+    playerName = document.getElementById("player-name").value.trim();
+    if (!playerName) {
+        alert("Введите имя!");
+        return;
+    }
     document.getElementById("start-screen").classList.remove("active");
     document.getElementById("level-selection-screen").classList.add("active");
 }
